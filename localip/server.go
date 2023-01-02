@@ -72,7 +72,7 @@ func (s *Server) CleanUp(domain, token, keyAuth string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	values := s.dnsChallenges[fqdn]
-	for i := range values {
+	for i := len(values) - 1; i >= 0; i-- {
 		if values[i] == value {
 			values = append(values[:i], values[i+1:]...)
 		}
