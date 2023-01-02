@@ -169,15 +169,17 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		s.mu.RUnlock()
 		if found {
 			if qtype == dns.TypeTXT {
-				m.Answer = append(m.Answer, &dns.TXT{
-					Hdr: dns.RR_Header{
-						Name:   qname,
-						Rrtype: dns.TypeTXT,
-						Class:  dns.ClassINET,
-						Ttl:    120,
-					},
-					Txt: challenges,
-				})
+				for _, c := range challenges {
+					m.Answer = append(m.Answer, &dns.TXT{
+						Hdr: dns.RR_Header{
+							Name:   qname,
+							Rrtype: dns.TypeTXT,
+							Class:  dns.ClassINET,
+							Ttl:    120,
+						},
+						Txt: []string{c},
+					})
+				}
 			}
 		} else {
 			m.Rcode = dns.RcodeNameError
