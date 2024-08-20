@@ -103,7 +103,7 @@ func (c *CertManager) needsRefresh() bool {
 	if err != nil {
 		return true
 	}
-	return time.Since(x509Cert.NotAfter) > -15*24*time.Hour
+	return time.Since(x509Cert.NotAfter) > -30*24*time.Hour
 }
 
 func (c *CertManager) readCache() (err error) {
