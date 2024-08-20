@@ -122,7 +122,7 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		ip = s.Self
 	} else {
 		ip = net.ParseIP(strings.ReplaceAll(strings.TrimSuffix(qname, "."+domain), "-", "."))
-		if ip != nil && !ip.IsPrivate() {
+		if !allowed(ip) {
 			ip = nil
 		}
 	}
@@ -186,4 +186,15 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		}
 	}
 	_ = w.WriteMsg(m)
+}
+
+func allowed(ip net.IP) bool {
+	if ip.IsPrivate() {
+		return true
+	}
+	if ip4 := ip.To4(); ip4 != nil && ip4[0] == 100 && ip4[1] == 64 {
+		// Allow CGNAT private space
+		return true
+	}
+	return false
 }
