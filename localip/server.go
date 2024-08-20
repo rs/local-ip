@@ -12,6 +12,8 @@ import (
 	"github.com/miekg/dns"
 )
 
+var testIP = net.ParseIP("203.0.113.0")
+
 type Server struct {
 	CertManager
 	Self net.IP
@@ -118,9 +120,14 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	m.Authoritative = true
 	m.RecursionAvailable = false
 	var ip net.IP
-	if qname == domain || qname == "ns."+domain {
+	switch qname {
+	case domain, "ns." + domain:
 		ip = s.Self
-	} else {
+	case "whoami." + domain:
+		ip = getAddrIP(w.RemoteAddr())
+	case "test." + domain:
+		ip = testIP
+	default:
 		ip = net.ParseIP(strings.ReplaceAll(strings.TrimSuffix(qname, "."+domain), "-", "."))
 		if !allowed(ip) {
 			ip = nil
@@ -197,4 +204,18 @@ func allowed(ip net.IP) bool {
 		return true
 	}
 	return false
+}
+
+func getAddrIP(addr net.Addr) net.IP {
+	if addr == nil {
+		return nil
+	}
+	switch addr := addr.(type) {
+	case *net.UDPAddr:
+		return addr.IP
+	case *net.TCPAddr:
+		return addr.IP
+	default:
+		return nil
+	}
 }
