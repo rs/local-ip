@@ -128,7 +128,7 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	case "test." + domain:
 		ip = testIP
 	default:
-		ip = net.ParseIP(strings.ReplaceAll(strings.TrimSuffix(qname, "."+domain), "-", "."))
+		ip = extractSubDomainIP(qname, domain)
 		if !allowed(ip) {
 			ip = nil
 		}
@@ -193,6 +193,21 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		}
 	}
 	_ = w.WriteMsg(m)
+}
+
+func extractSubDomainIP(qname, domain string) net.IP {
+	// Get the subdomain part of the qname
+	subDomain := strings.TrimSuffix(qname, "."+domain)
+	// Remove any prefix with double hyphens
+	if idx := strings.LastIndex(subDomain, "--"); idx > 0 {
+		subDomain = subDomain[idx+2:]
+	}
+	if strings.IndexByte(subDomain, '.') != -1 {
+		return nil
+	}
+	// Replace hyphens with dots (IPv4 only)
+	ipStr := strings.ReplaceAll(subDomain, "-", ".")
+	return net.ParseIP(ipStr)
 }
 
 func allowed(ip net.IP) bool {
