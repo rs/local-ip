@@ -17,6 +17,7 @@ var testIP = net.ParseIP("203.0.113.0")
 type Server struct {
 	CertManager
 	Self net.IP
+	Zone Zone
 }
 
 func (s *Server) Serve() error {
@@ -188,6 +189,8 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 					})
 				}
 			}
+		} else if s.Zone != nil {
+			m = s.Zone.handleZone(r)
 		} else {
 			m.Rcode = dns.RcodeNameError
 		}
